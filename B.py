@@ -116,5 +116,7 @@ print(mission.spacecraft_mass)
 
 G = 6.67e-11
 v_escape = np.sqrt((2*G*system.masses[0]*1.989e30 / (system.radii[0]*1000) / 3.6))
+F = v_escape / 600
 print(v_escape)
+print(F)
 # plt.show()
