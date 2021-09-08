@@ -4,8 +4,14 @@ from ast2000tools.space_mission import SpaceMission
 
 seed = utils.get_seed('antonabr')
 system = SolarSystem(seed)
+mission = SpaceMission(seed)
+
+# print(mission.spacecraft_mass)
+# system.print_informations()
 
 '''
+Spacecraft mass: 1100.0 kg
+
 Information about the solar system with seed 12497:
 
 Number of planets: 8
