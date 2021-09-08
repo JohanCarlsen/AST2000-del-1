@@ -94,7 +94,7 @@ class Box:
                     if abs(r[j, 0, 0]) < self.nozzle_side/2 and abs(r[j, 0, 1]) < self.nozzle_side/2:
                         self.particles_out += 1
                         self.rocket_p += H2.mass*(-v[j, 0, 2])
-                        self.rocket_F += 2*H2.mass*(-v[j, 0 ,2]) / dt
+                        self.rocket_F += 2*H2.mass*(-v[j, 0, 2]) / dt
                         r[j, 0, :] = [0, 0 , self.L/2]
                     else:
                         v[j, 0, 2] = -v[j, 0 , 2]
@@ -108,15 +108,41 @@ class Box:
 fig = plt.figure()
 ax = fig.add_subplot(projection='3d')
 engine = Box(len_box=1e-6, T=3e3, num_particles=100000, nozzle_side_len=0.5e-6)  # Må kjøre på 100 000 !!!!!
-engine.set_initials()
-engine.simulate()
+# engine.set_initials()
+# engine.simulate()
 print(mission.spacecraft_mass)
 
 # system.print_info()
 
-G = 6.67e-11
-v_escape = np.sqrt((2*G*system.masses[0]*1.989e30 / (system.radii[0]*1000) / 3.6))
-F = v_escape / 600
-print(v_escape)
-print(F)
+G = const.G
+v_escape = np.sqrt(2*G*system.masses[0]*1.989e30 / (system.radii[0]*1000))
+F = mission.spacecraft_mass*v_escape / 600
+print(f'v_escape = {v_escape}m/s')
+print(f'F = {F}N')
 # plt.show()
+
+# Testkjøring resultater:
+"""
+len_box=1e-6, T=3e3, num_particles=100000, nozzle_side_len=0.5e-6
+
+set_initials ran in 2.1236491203308105 seconds
+Particles out : 45958
+Total time : 1.000000000000004e-09
+rocket_p : 7.333733882078984e-19
+rocket_F : 1.4667467764157737e-06
+mass loss : 1.5382671116999938e-13
+simulate ran in 303.56196689605713 seconds
+1100.0
+v_escape = 12245.420725509939m/s
+F = 22449.93799676822N
+"""
+print(system.initial_positions[:,0])
+
+pos = (system.initial_positions[0,0] + system.radii[0]*6.68458712e-9, system.initial_positions[1,0])
+
+a = const.G*system.masses[0]*1.989e30/(system.radii[0]*1000)**2
+print(a)
+mission.set_launch_parameters(6*1.4667467764157737e6, 6*1.5382671116999938e-1, 200000, 2*600, pos, 0)
+print(314*1.5382671116999938e-1)
+mission.launch_rocket(0.01)
+# mission.verify_launch_result()
