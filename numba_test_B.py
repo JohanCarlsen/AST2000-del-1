@@ -71,6 +71,7 @@ class Box:
         r_init = np.zeros((N, 1, 3), dtype=np.float64)
         v_init = np.zeros((N, 1, 3), dtype=np.float64)
         random.seed(123)
+        # Setter initialbetingelser for hastighet og posisjon fordelt gaussisk og uniformt
         for i in range(N):
             for j in range(3):
                 r_init[i, 0, j] = random.uniform(-L/2, L/2)
@@ -85,6 +86,7 @@ class Box:
             rocket_P = 0
             r = r_init.copy()
             v = v_init.copy()
+            # Bruker Eulers metode for integrasjon
             for i in range(1000):
                 T += dt
                 for j in range(N):
@@ -112,13 +114,13 @@ class Box:
         analytic_P = self.N*sc.k*self.Temp / 1e-18
         self.mass_loss = self.particles_out * H2.mass / self.T
         self.rocket_F = 2*self.rocket_p / self.T
-        print(analytic_P)
-        print(self.rocket_P)
+        print(f'Analytic pressure : {analytic_P}Pa')
+        print(f'Numerical pressure : {self.rocket_P}Pa')
         print(f'Particles out : {self.particles_out}')
-        print(f'Total time : {self.T}')
-        print(f'rocket_p : {self.rocket_p}')
-        print(f'rocket_F : {self.rocket_F}')
-        print(f'mass loss : {self.mass_loss}')
+        print(f'Total time : {self.T}s')
+        print(f'rocket_p : {self.rocket_p}kgm/s')
+        print(f'rocket_F : {self.rocket_F}N')
+        print(f'mass loss : {self.mass_loss}kg/s')
 
 if __name__ == '__main__':
     fig = plt.figure()
@@ -126,26 +128,28 @@ if __name__ == '__main__':
     engine = Box(len_box=1e-6, T=3.5e3, num_particles=100000, nozzle_side_len=0.6e-6)  # Må kjøre på 100 000 !!!!!
     engine.simulate()
 
-    print(mission.spacecraft_mass)
+    print(f'Spacecraft mass : {mission.spacecraft_mass}kg')
+    print(f'Spacecraft area : {mission.spacecraft_area}m^2')
 
 
 # Testkjøring resultater:
 """
-len_box=1e-6, T=3e3, num_particles=100000, nozzle_side_len=0.5e-6
+len_box=1e-6, T=3.5e3, num_particles=100000, nozzle_side_len=0.6e-6
 
-Particles out : 46314
-Total time : 1.000000000000004e-09
-rocket_p : 7.487250746872403e-19
-rocket_F : 1.4974501493744745e-09
-mass loss : 1.5501828410999938e-13
-simulate ran in 17.815258979797363 seconds
-1100.0
-v_escape = 12249.367264147773m/s
-F = 22457.17331760425N
+Analytic pressure : 4832.2715Pa
+Numerical pressure : 3622.973344556907Pa
+Particles out : 78772
+Total time : 1.000000000000004e-09s
+rocket_p : 1.3734987349945878e-18kgm/s
+rocket_F : 2.7469974699891646e-09N
+mass loss : 2.636589427799989e-13kg/s
+simulate ran in 18.163471937179565 seconds
+Spacecraft mass : 1100.0kg
+Spacecraft area : 16.0m^2
 """
+
 G = const.G
 v_escape = np.sqrt(2*G*system.masses[0]*1.989e30 / (system.radii[0]*1000))
-print(mission.spacecraft_area)
 print(f'v_escape = {v_escape}m/s')
 planet_radius = system.radii[0]*1000
 planet_mass = system.masses[0]*1.989e30
@@ -195,19 +199,17 @@ mass_consumed_boost, fuel_left = rocket_boost(2000, fuel_left, gravity=False)
 print(f'consumption : {mass_consumed_boost}\nfuel left : {fuel_left}')
 
 """
-1100.0      # spacecraft_mass
-16.0        # spacecraft_area
 v_escape = 12249.367264147773m/s
-Launch success at time 424.02000000001453
-51034.56860757253
-[[0.         0.        ]
- [1.73239477 0.        ]
- [3.46478985 0.        ]
- ...
- [0.         0.        ]
- [0.         0.        ]
- [0.         0.        ]]
+gravity is on
+Succesful boost in 835.9359999871447 seconds
+consumption : 3526.4320318343753
+fuel left : 473.5679681198144
+gravity is off
+Succesful boost in 65.15099999994703 seconds
+consumption : 274.84230049690007
+fuel left : 198.72566761751273
 """
+
 # print(system.initial_positions[:,0])
 #
 # pos = (system.initial_positions[0,0] + system.radii[0]*6.68458712e-9, system.initial_positions[1,0])
