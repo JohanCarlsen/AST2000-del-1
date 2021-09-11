@@ -158,7 +158,6 @@ AU = 149597871*1000
 speed_factor = AU / (365*24*60*60)
 v_initial = system.initial_velocities[:,0]*speed_factor
 r_initial = system.initial_positions[:,0]*AU
-print(v_initial)
 
 @njit(cache=True)
 def rocket_boost(dv, fuel, gravity=True):
