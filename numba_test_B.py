@@ -10,7 +10,7 @@ import time
 from numba import njit
 
 """
-Egen kode
+Egen kode !!! 
 
 Task B, C, D
 """
@@ -153,7 +153,7 @@ print(f'v_escape = {v_escape}m/s\n')
 planet_radius = system.radii[0]*1000
 planet_mass = system.masses[0]*1.989e30
 spacecraft_mass = mission.spacecraft_mass
-initial_fuel = 4000
+initial_fuel = 5000
 number_of_boxes = 1.6e13
 thrust_force = engine.rocket_F * number_of_boxes
 mass_loss_rocket = engine.mass_loss * number_of_boxes
