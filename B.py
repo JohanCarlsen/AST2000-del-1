@@ -83,21 +83,21 @@ class Box:
             self.T += dt
             # ax.scatter(r[0,0,0], r[0,0,1], r[0,0,2], s=0.2, color='#1f77b4')
             for j in range(self.N):
-                if abs(r[j, 0, 0]) >= self.L/2:     # Tester x-koordinat for vegg-kollisjon
-                    v[j, 0, 0] = -v[j, 0, 0]
-                if abs(r[j, 0, 1]) >= self.L/2:     # Tester y-koordinat for vegg-kollisjon
-                    v[j, 0, 1] = -v[j, 0, 1]
-                if r[j, 0, 2] >= self.L/2:     # Tester z-koordinat for tak-kollisjon
-                    v[j, 0, 2] = -v[j, 0, 2]
-                # Tester z-koordinat for kollisjon med gulvet, evt. ut gjennom hullet
-                if r[j, 0, 2] <= -self.L/2:
-                    if abs(r[j, 0, 0]) < self.nozzle_side/2 and abs(r[j, 0, 1]) < self.nozzle_side/2:
-                        self.particles_out += 1
-                        self.rocket_p += H2.mass*(-v[j, 0, 2])
-                        self.rocket_F += 2*H2.mass*(-v[j, 0, 2]) / dt
-                        r[j, 0, :] = [0, 0 , self.L/2]
-                    else:
-                        v[j, 0, 2] = -v[j, 0 , 2]
+                    if abs(r[j, 0, 0]) >= self.L/2:     # Tester x-koordinat for vegg-kollisjon
+                        v[j, 0, 0] = -v[j, 0, 0]
+                    if abs(r[j, 0, 1]) >= self.L/2:     # Tester y-koordinat for vegg-kollisjon
+                        v[j, 0, 1] = -v[j, 0, 1]
+                    if r[j, 0, 2] >= self.L/2:     # Tester z-koordinat for tak-kollisjon
+                        v[j, 0, 2] = -v[j, 0, 2]
+                    # Tester z-koordinat for kollisjon med gulvet, evt. ut gjennom hullet
+                    if r[j, 0, 2] <= -self.L/2:
+                        if abs(r[j, 0, 0]) < self.nozzle_side/2 and abs(r[j, 0, 1]) < self.nozzle_side/2:
+                            self.particles_out += 1
+                            self.rocket_p += H2.mass*(-v[j, 0, 2])
+                            self.rocket_F += 2*H2.mass*(-v[j, 0, 2]) / dt
+                            r[j, 0, :] = [0, 0 , self.L/2]
+                        else:
+                            v[j, 0, 2] = -v[j, 0 , 2]
         self.mass_loss = self.particles_out * H2.mass / self.T
         print(f'Particles out : {self.particles_out}')
         print(f'Total time : {self.T}')
