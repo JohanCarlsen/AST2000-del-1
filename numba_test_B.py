@@ -70,7 +70,7 @@ class Box:
         k = sc.k
         r_init = np.zeros((N, 1, 3), dtype=np.float64)
         v_init = np.zeros((N, 1, 3), dtype=np.float64)
-        random.seed(1)
+        random.seed(123)
         for i in range(N):
             for j in range(3):
                 r_init[i, 0, j] = random.uniform(-L/2, L/2)
@@ -87,7 +87,6 @@ class Box:
             v = v_init.copy()
             for i in range(1000):
                 T += dt
-                # ax.scatter(r[0,0,0], r[0,0,1], r[0,0,2], s=0.2, color='#1f77b4')
                 for j in range(N):
                     r[j,0,:] = r[j,0,:] + v[j,0,:]*dt
                     if abs(r[j, 0, 0]) >= L/2:     # Tester x-koordinat for vegg-kollisjon
@@ -124,17 +123,11 @@ class Box:
 if __name__ == '__main__':
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
-    engine = Box(len_box=1e-6, T=3e3, num_particles=100000, nozzle_side_len=0.5e-6)  # Må kjøre på 100 000 !!!!!
+    engine = Box(len_box=1e-6, T=3.5e3, num_particles=100000, nozzle_side_len=0.6e-6)  # Må kjøre på 100 000 !!!!!
     engine.simulate()
 
     print(mission.spacecraft_mass)
 
-# system.print_info()
-
-G = const.G
-v_escape = np.sqrt(2*G*system.masses[0]*1.989e30 / (system.radii[0]*1000))
-print(mission.spacecraft_area)
-print(f'v_escape = {v_escape}m/s')
 
 # Testkjøring resultater:
 """
@@ -150,14 +143,17 @@ simulate ran in 17.815258979797363 seconds
 v_escape = 12249.367264147773m/s
 F = 22457.17331760425N
 """
+G = const.G
+v_escape = np.sqrt(2*G*system.masses[0]*1.989e30 / (system.radii[0]*1000))
+print(mission.spacecraft_area)
+print(f'v_escape = {v_escape}m/s')
 planet_radius = system.radii[0]*1000
 planet_mass = system.masses[0]*1.989e30
 spacecraft_mass = mission.spacecraft_mass
-initial_fuel = 3000
+initial_fuel = 4000
 number_of_boxes = 1.6e13
 thrust_force = engine.rocket_F * number_of_boxes
 mass_loss_rocket = engine.mass_loss * number_of_boxes
-G = const.G
 AU = 149597871*1000
 speed_factor = AU / (365*24*60*60)
 v_initial = system.initial_velocities[:,0]*speed_factor
@@ -165,28 +161,39 @@ r_initial = system.initial_positions[:,0]*AU
 print(v_initial)
 
 @njit(cache=True)
-def rocket_boost(dv):
-    total_mass = initial_fuel + spacecraft_mass
-    consumption = 0
+def rocket_boost(dv, fuel, gravity=True):
+    if gravity == True:
+        gamma = G
+        print('gravity is on')
+    if gravity == False:
+        gamma = 0
+        print('gravity is off')
+    total_mass = fuel + spacecraft_mass
+    fuel_consumption = 0
     v = 0
     r = planet_radius
-    a = (thrust_force - G*planet_mass / r**2) / total_mass
+    a = (thrust_force - gamma*planet_mass / r**2) / total_mass
     dt = 1e-3
+    T = 0
     while v <= dv:
         v = v + a*dt
         r = r + v*dt
+        T += dt
         total_mass -= mass_loss_rocket*dt
-        consumption += mass_loss_rocket*dt
-        a = (thrust_force - G*planet_mass / r**2) / total_mass
+        fuel_consumption += mass_loss_rocket*dt
+        a = (thrust_force - gamma*planet_mass / r**2) / total_mass
         if total_mass <= spacecraft_mass:
             print('not enough fuel')
             print('r=', r)
             print('v=', v)
-            return consumption
-    return consumption
+            return fuel_consumption, total_mass - spacecraft_mass
+    print('Succesful boost in', T, 'seconds')
+    return fuel_consumption, total_mass - spacecraft_mass
 
-mass_consumed_boost = rocket_boost(v_escape)
-print(mass_consumed_boost)
+mass_consumed_boost, fuel_left = rocket_boost(v_escape, initial_fuel, gravity=True)
+print(f'consumption : {mass_consumed_boost}\nfuel left : {fuel_left}')
+mass_consumed_boost, fuel_left = rocket_boost(2000, fuel_left, gravity=False)
+print(f'consumption : {mass_consumed_boost}\nfuel left : {fuel_left}')
 
 """
 1100.0      # spacecraft_mass
