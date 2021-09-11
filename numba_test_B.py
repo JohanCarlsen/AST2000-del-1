@@ -70,7 +70,7 @@ class Box:
         k = sc.k
         r_init = np.zeros((N, 1, 3), dtype=np.float64)
         v_init = np.zeros((N, 1, 3), dtype=np.float64)
-        random.seed(2001)
+        random.seed(1)
         for i in range(N):
             for j in range(3):
                 r_init[i, 0, j] = random.uniform(-L/2, L/2)
@@ -92,10 +92,8 @@ class Box:
                     r[j,0,:] = r[j,0,:] + v[j,0,:]*dt
                     if abs(r[j, 0, 0]) >= L/2:     # Tester x-koordinat for vegg-kollisjon
                         v[j, 0, 0] = -v[j, 0, 0]
-                        rocket_P += 2*H2_mass*(-v[j, 0 ,0]) / (L**2)
                     if abs(r[j, 0, 1]) >= L/2:     # Tester y-koordinat for vegg-kollisjon
                         v[j, 0, 1] = -v[j, 0, 1]
-                        rocket_P += 2*H2_mass*(-v[j, 0 ,1]) / (L**2)
                     if r[j, 0, 2] >= L/2:     # Tester z-koordinat for tak-kollisjon
                         v[j, 0, 2] = -v[j, 0, 2]
                         rocket_P += 2*H2_mass*(-v[j, 0 ,2]) / (L**2)
@@ -104,18 +102,17 @@ class Box:
                         if abs(r[j, 0, 0]) < nozzle_side/2 and abs(r[j, 0, 1]) < nozzle_side/2:
                             particles_out += 1
                             rocket_p += H2_mass*(-v[j, 0, 2])
-                            rocket_F += 2*H2_mass*(-v[j, 0 ,2]) / dt
                             # v[j, 0, 2] = -v[j, 0 , 2]
                             r[j, 0, :] = [0, 0, L/2]
                         else:
                             v[j, 0, 2] = -v[j, 0 , 2]
-                            rocket_P += 2*H2_mass*(-v[j, 0 ,2]) / (L**2 - nozzle_side**2)
 
-            return v, r, rocket_p, rocket_F, rocket_P, particles_out, T
+            return v, r, rocket_p, rocket_P/T, particles_out, T
 
-        self.v, self.r, self.rocket_p, self.rocket_F, self.rocket_P, self.particles_out, self.T = run()
+        self.v, self.r, self.rocket_p, self.rocket_P, self.particles_out, self.T = run()
         analytic_P = self.N*sc.k*self.Temp / 1e-18
         self.mass_loss = self.particles_out * H2.mass / self.T
+        self.rocket_F = 2*self.rocket_p / self.T
         print(analytic_P)
         print(self.rocket_P)
         print(f'Particles out : {self.particles_out}')
@@ -156,7 +153,7 @@ F = 22457.17331760425N
 planet_radius = system.radii[0]*1000
 planet_mass = system.masses[0]*1.989e30
 spacecraft_mass = mission.spacecraft_mass
-initial_fuel = 50000
+initial_fuel = 3000
 number_of_boxes = 1.6e13
 thrust_force = engine.rocket_F * number_of_boxes
 mass_loss_rocket = engine.mass_loss * number_of_boxes
@@ -167,21 +164,29 @@ v_initial = system.initial_velocities[:,0]*speed_factor
 r_initial = system.initial_positions[:,0]*AU
 print(v_initial)
 
-@njit
+@njit(cache=True)
 def rocket_boost(dv):
     total_mass = initial_fuel + spacecraft_mass
-    a = thrust_force / total_mass
+    consumption = 0
     v = 0
+    r = planet_radius
+    a = (thrust_force - G*planet_mass / r**2) / total_mass
     dt = 1e-3
     while v <= dv:
         v = v + a*dt
+        r = r + v*dt
         total_mass -= mass_loss_rocket*dt
-        a = thrust_force / total_mass
-    consumption = initial_fuel + spacecraft_mass - total_mass
+        consumption += mass_loss_rocket*dt
+        a = (thrust_force - G*planet_mass / r**2) / total_mass
+        if total_mass <= spacecraft_mass:
+            print('not enough fuel')
+            print('r=', r)
+            print('v=', v)
+            return consumption
     return consumption
 
-mass_left = rocket_boost(1000)
-print(mass_left)
+mass_consumed_boost = rocket_boost(v_escape)
+print(mass_consumed_boost)
 
 """
 1100.0      # spacecraft_mass
