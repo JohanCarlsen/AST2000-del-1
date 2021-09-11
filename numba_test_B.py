@@ -114,22 +114,21 @@ class Box:
         analytic_P = self.N*sc.k*self.Temp / 1e-18
         self.mass_loss = self.particles_out * H2.mass / self.T
         self.rocket_F = 2*self.rocket_p / self.T
-        print(f'Analytic pressure : {analytic_P}Pa')
-        print(f'Numerical pressure : {self.rocket_P}Pa')
-        print(f'Particles out : {self.particles_out}')
-        print(f'Total time : {self.T}s')
-        print(f'rocket_p : {self.rocket_p}kgm/s')
-        print(f'rocket_F : {self.rocket_F}N')
-        print(f'mass loss : {self.mass_loss}kg/s')
+        print('-------------------------------------------')
+        print(f'| Analytic pressure : {analytic_P}Pa')
+        print(f'| Numerical pressure : {self.rocket_P}Pa')
+        print(f'| Particles out : {self.particles_out}')
+        print(f'| Total time : {self.T}s')
+        print(f'| rocket_p : {self.rocket_p}kgm/s')
+        print(f'| rocket_F : {self.rocket_F}N')
+        print(f'| mass loss : {self.mass_loss}kg/s')
+        print('-------------------------------------------\n')
 
 if __name__ == '__main__':
-    fig = plt.figure()
-    ax = fig.add_subplot(projection='3d')
     engine = Box(len_box=1e-6, T=3.5e3, num_particles=100000, nozzle_side_len=0.6e-6)  # Må kjøre på 100 000 !!!!!
     engine.simulate()
-
     print(f'Spacecraft mass : {mission.spacecraft_mass}kg')
-    print(f'Spacecraft area : {mission.spacecraft_area}m^2')
+    print(f'Spacecraft area : {mission.spacecraft_area}m^2\n')
 
 
 # Testkjøring resultater:
@@ -150,7 +149,7 @@ Spacecraft area : 16.0m^2
 
 G = const.G
 v_escape = np.sqrt(2*G*system.masses[0]*1.989e30 / (system.radii[0]*1000))
-print(f'v_escape = {v_escape}m/s')
+print(f'v_escape = {v_escape}m/s\n')
 planet_radius = system.radii[0]*1000
 planet_mass = system.masses[0]*1.989e30
 spacecraft_mass = mission.spacecraft_mass
