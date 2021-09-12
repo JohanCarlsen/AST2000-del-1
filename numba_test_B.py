@@ -70,7 +70,7 @@ class Box:
         k = sc.k
         r_init = np.zeros((N, 1, 3), dtype=np.float64)
         v_init = np.zeros((N, 1, 3), dtype=np.float64)
-        random.seed(123)
+        random.seed(1)
         # Setter initialbetingelser for hastighet og posisjon fordelt gaussisk og uniformt
         for i in range(N):
             for j in range(3):
@@ -106,7 +106,7 @@ class Box:
                             particles_out += 1
                             rocket_p += H2_mass*(-v[j, 0, 2])
                             # v[j, 0, 2] = -v[j, 0 , 2]
-                            r[j, 0, :] = [0, 0, L/2]
+                            r[j, 0, :] = [0, 0, L/2 - 1e-12]    # Setter 1e-12 under så ikke koden skal registrere ny posisjon som kollisjon og snu fortegnet
                         else:
                             v[j, 0, 2] = -v[j, 0 , 2]
                             rocket_P += 2*H2_mass*(abs(v[j, 0 ,2])) / (L**2 - nozzle_side**2)
