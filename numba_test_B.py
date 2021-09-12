@@ -114,10 +114,11 @@ class Box:
             return v, r, rocket_p/T, rocket_P/(6*T), particles_out/T, T
 
         self.v, self.r, self.rocket_p, self.rocket_P, self.particles_out, self.T = run()
-        analytic_P = self.N*sc.k*self.Temp / 1e-18
+        analytic_P = self.N*sc.k*self.Temp / self.L**3
         self.mass_loss = self.particles_out * H2.mass
         self.rocket_F = 2*self.rocket_p
         print('-------------------------------------------')
+        print(f'| Units per. second:')
         print(f'| Analytic pressure : {analytic_P}Pa')
         print(f'| Numerical pressure : {self.rocket_P}Pa')
         print(f'| Particles out : {self.particles_out}')
@@ -128,7 +129,7 @@ class Box:
         print('-------------------------------------------\n')
 
 if __name__ == '__main__':
-    engine = Box(len_box=1e-6, T=3e3, num_particles=100000, nozzle_side_len=0.5e-6)  # Må kjøre på 100 000 !!!!!
+    engine = Box(len_box=1e-6, T=3.5e3, num_particles=100000, nozzle_side_len=0.6e-6)  # Må kjøre på 100 000 !!!!!
     engine.simulate()
     print(f'Spacecraft mass : {mission.spacecraft_mass}kg')
     print(f'Spacecraft area : {mission.spacecraft_area}m^2\n')
@@ -156,9 +157,9 @@ print(f'v_escape = {v_escape}m/s\n')
 planet_radius = system.radii[0]*1000
 planet_mass = system.masses[0]*1.989e30
 spacecraft_mass = mission.spacecraft_mass
-initial_fuel = 6000
+initial_fuel = 22000
 number_of_boxes = 1.6e13
-thrust_force = engine.rocket_F * number_of_boxes
+thrust_force = engine.rocket_F * number_of_boxes / 2000
 mass_loss_rocket = engine.mass_loss * number_of_boxes
 AU = 149597871*1000
 speed_factor = AU / (365*24*60*60)
