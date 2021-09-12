@@ -157,9 +157,9 @@ print(f'v_escape = {v_escape}m/s\n')
 planet_radius = system.radii[0]*1000
 planet_mass = system.masses[0]*1.989e30
 spacecraft_mass = mission.spacecraft_mass
-initial_fuel = 22000
+initial_fuel = 8000
 number_of_boxes = 1.6e13
-thrust_force = engine.rocket_F * number_of_boxes / 2000
+thrust_force = engine.rocket_F * number_of_boxes
 mass_loss_rocket = engine.mass_loss * number_of_boxes
 AU = 149597871*1000
 speed_factor = AU / (365*24*60*60)
@@ -194,6 +194,8 @@ def rocket_boost(dv, fuel, gravity=True):
             print('v=', v)
             return fuel_consumption, total_mass - spacecraft_mass
     print('Succesful boost in', T, 'seconds')
+    if T > 1200:
+        print('Launch is taking too much time')
     return fuel_consumption, total_mass - spacecraft_mass
 
 mass_consumed_boost, fuel_left = rocket_boost(v_escape, initial_fuel, gravity=True)
