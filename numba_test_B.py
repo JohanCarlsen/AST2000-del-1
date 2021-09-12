@@ -111,12 +111,12 @@ class Box:
                             v[j, 0, 2] = -v[j, 0 , 2]
                             rocket_P += 2*H2_mass*(abs(v[j, 0 ,2])) / (L**2 - nozzle_side**2)
 
-            return v, r, rocket_p, rocket_P/(6*T), particles_out, T
+            return v, r, rocket_p/T, rocket_P/(6*T), particles_out/T, T
 
         self.v, self.r, self.rocket_p, self.rocket_P, self.particles_out, self.T = run()
         analytic_P = self.N*sc.k*self.Temp / 1e-18
-        self.mass_loss = self.particles_out * H2.mass / self.T
-        self.rocket_F = 2*self.rocket_p / self.T
+        self.mass_loss = self.particles_out * H2.mass
+        self.rocket_F = 2*self.rocket_p
         print('-------------------------------------------')
         print(f'| Analytic pressure : {analytic_P}Pa')
         print(f'| Numerical pressure : {self.rocket_P}Pa')
@@ -128,7 +128,7 @@ class Box:
         print('-------------------------------------------\n')
 
 if __name__ == '__main__':
-    engine = Box(len_box=1e-6, T=3.5e3, num_particles=100000, nozzle_side_len=0.6e-6)  # Må kjøre på 100 000 !!!!!
+    engine = Box(len_box=1e-6, T=3e3, num_particles=100000, nozzle_side_len=0.5e-6)  # Må kjøre på 100 000 !!!!!
     engine.simulate()
     print(f'Spacecraft mass : {mission.spacecraft_mass}kg')
     print(f'Spacecraft area : {mission.spacecraft_area}m^2\n')
