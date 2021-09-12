@@ -10,7 +10,7 @@ import time
 from numba import njit
 
 """
-Egen kode !!! 
+Egen kode !!!
 
 Task B, C, D
 """
@@ -70,7 +70,7 @@ class Box:
         k = sc.k
         r_init = np.zeros((N, 1, 3), dtype=np.float64)
         v_init = np.zeros((N, 1, 3), dtype=np.float64)
-        random.seed(123)
+        random.seed(1)
         # Setter initialbetingelser for hastighet og posisjon fordelt gaussisk og uniformt
         for i in range(N):
             for j in range(3):
@@ -93,22 +93,25 @@ class Box:
                     r[j,0,:] = r[j,0,:] + v[j,0,:]*dt
                     if abs(r[j, 0, 0]) >= L/2:     # Tester x-koordinat for vegg-kollisjon
                         v[j, 0, 0] = -v[j, 0, 0]
+                        rocket_P += 2*H2_mass*(abs(v[j, 0 ,0])) / (L**2)
                     if abs(r[j, 0, 1]) >= L/2:     # Tester y-koordinat for vegg-kollisjon
                         v[j, 0, 1] = -v[j, 0, 1]
+                        rocket_P += 2*H2_mass*(abs(v[j, 0 ,1])) / (L**2)
                     if r[j, 0, 2] >= L/2:     # Tester z-koordinat for tak-kollisjon
                         v[j, 0, 2] = -v[j, 0, 2]
-                        rocket_P += 2*H2_mass*(-v[j, 0 ,2]) / (L**2)
+                        rocket_P += 2*H2_mass*(abs(v[j, 0 ,2])) / (L**2)
                     # Tester z-koordinat for kollisjon med gulvet, evt. ut gjennom hullet
                     if r[j, 0, 2] <= -L/2:
                         if abs(r[j, 0, 0]) < nozzle_side/2 and abs(r[j, 0, 1]) < nozzle_side/2:
                             particles_out += 1
                             rocket_p += H2_mass*(-v[j, 0, 2])
                             # v[j, 0, 2] = -v[j, 0 , 2]
-                            r[j, 0, :] = [0, 0, L/2]
+                            r[j, 0, :] = [0, 0, L/2 - 1e-12]    # Setter 1e-12 under så ikke koden skal registrere ny posisjon som kollisjon og snu fortegnet
                         else:
                             v[j, 0, 2] = -v[j, 0 , 2]
+                            rocket_P += 2*H2_mass*(abs(v[j, 0 ,2])) / (L**2 - nozzle_side**2)
 
-            return v, r, rocket_p, rocket_P/T, particles_out, T
+            return v, r, rocket_p, rocket_P/(6*T), particles_out, T
 
         self.v, self.r, self.rocket_p, self.rocket_P, self.particles_out, self.T = run()
         analytic_P = self.N*sc.k*self.Temp / 1e-18
@@ -153,7 +156,7 @@ print(f'v_escape = {v_escape}m/s\n')
 planet_radius = system.radii[0]*1000
 planet_mass = system.masses[0]*1.989e30
 spacecraft_mass = mission.spacecraft_mass
-initial_fuel = 5000
+initial_fuel = 6000
 number_of_boxes = 1.6e13
 thrust_force = engine.rocket_F * number_of_boxes
 mass_loss_rocket = engine.mass_loss * number_of_boxes
@@ -194,8 +197,8 @@ def rocket_boost(dv, fuel, gravity=True):
 
 mass_consumed_boost, fuel_left = rocket_boost(v_escape, initial_fuel, gravity=True)
 print(f'consumption : {mass_consumed_boost}\nfuel left : {fuel_left}')
-mass_consumed_boost, fuel_left = rocket_boost(2000, fuel_left, gravity=False)
-print(f'consumption : {mass_consumed_boost}\nfuel left : {fuel_left}')
+# mass_consumed_boost, fuel_left = rocket_boost(2000, fuel_left, gravity=False)
+# print(f'consumption : {mass_consumed_boost}\nfuel left : {fuel_left}')
 
 """
 v_escape = 12249.367264147773m/s
@@ -209,12 +212,11 @@ consumption : 274.84230049690007
 fuel left : 198.72566761751273
 """
 
-# print(system.initial_positions[:,0])
-#
+
 # pos = (system.initial_positions[0,0] + system.radii[0]*6.68458712e-9, system.initial_positions[1,0])
 #
-# a = const.G*system.masses[0]*1.989e30/(system.radii[0]*1000)**2
-# print(a)
-# mission.set_launch_parameters(54*engine.rocket_F*1e12, 54*engine.mass_loss*1e12, 5000, 2*600, pos, 0)
-# mission.launch_rocket(0.01)
-# mission.verify_launch_result()
+# g = const.G*system.masses[0]*1.989e30/(system.radii[0]*1000)**2
+# print(g)
+# mission.set_launch_parameters(thrust_force, mass_loss_rocket, initial_fuel, 2*600, pos, 0)
+# mission.launch_rocket(0.001)
+# # mission.verify_launch_result()
