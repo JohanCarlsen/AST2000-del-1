@@ -1,3 +1,8 @@
+"""
+Egen kode !!!
+
+Task B, C, D
+"""
 import ast2000tools.constants as const
 import ast2000tools.utils as utils
 from ast2000tools.solar_system import SolarSystem
@@ -9,11 +14,6 @@ import matplotlib.pyplot as plt
 import time
 from numba import njit
 
-"""
-Egen kode !!!
-
-Task B, C, D
-"""
 
 seed = utils.get_seed('antonabr')
 system = SolarSystem(seed)
@@ -58,7 +58,7 @@ H2 = Particle(2*1.6735575e-27)  # H2 particle
 
 class Box:
     def __init__(self, len_box, T, num_particles, nozzle_side_len):
-        self.Temp = T; self.N = num_particles
+        self.Temp = T; self.N = int(num_particles)
         self.nozzle_side = nozzle_side_len
         self.L = len_box
 
@@ -82,7 +82,6 @@ class Box:
             T = 0
             particles_out = 0
             rocket_p = 0
-            rocket_F = 0
             rocket_P = 0
             r = r_init.copy()
             v = v_init.copy()
@@ -116,7 +115,7 @@ class Box:
         self.v, self.r, self.rocket_p, self.rocket_P, self.particles_out, self.T = run()
         analytic_P = self.N*sc.k*self.Temp / self.L**3
         self.mass_loss = self.particles_out * H2.mass
-        self.rocket_F = 2*self.rocket_p
+        self.rocket_F = self.rocket_p
         print('-------------------------------------------')
         print(f'| Units per. second:')
         print(f'| Analytic pressure : {analytic_P}Pa')
@@ -129,7 +128,7 @@ class Box:
         print('-------------------------------------------\n')
 
 if __name__ == '__main__':
-    engine = Box(len_box=1e-6, T=3.5e3, num_particles=100000, nozzle_side_len=0.6e-6)  # Må kjøre på 100 000 !!!!!
+    engine = Box(len_box=0.5e-6, T=3e3, num_particles=250e3, nozzle_side_len=0.25e-6)  # Må kjøre på 100 000 !!!!!
     engine.simulate()
     print(f'Spacecraft mass : {mission.spacecraft_mass}kg')
     print(f'Spacecraft area : {mission.spacecraft_area}m^2\n')
@@ -154,20 +153,21 @@ Spacecraft area : 16.0m^2
 G = const.G
 v_escape = np.sqrt(2*G*system.masses[0]*1.989e30 / (system.radii[0]*1000))
 print(f'v_escape = {v_escape}m/s\n')
+number_of_boxes = 4*1.6e13
 planet_radius = system.radii[0]*1000
 planet_mass = system.masses[0]*1.989e30
 spacecraft_mass = mission.spacecraft_mass
-initial_fuel = 4000
-number_of_boxes = 1.6e13
+initial_fuel = 28000
 thrust_force = engine.rocket_F * number_of_boxes
 mass_loss_rocket = engine.mass_loss * number_of_boxes
 AU = 149597871*1000
 speed_factor = AU / (365*24*60*60)
-v_initial = system.initial_velocities[:,0]*speed_factor
-r_initial = system.initial_positions[:,0]*AU
+print(G*planet_mass / planet_radius**2)
+print(thrust_force)
+rotational_time = system.rotational_periods[0]*24*60*60
 
-# @njit(cache=True)
-def rocket_boost(dv, fuel, gravity=True):
+@njit(cache=True)
+def rocket_boost(dv, fuel, gravity=False):
     if gravity == True:
         gamma = G
         print('gravity is on')
@@ -175,95 +175,77 @@ def rocket_boost(dv, fuel, gravity=True):
         gamma = 0
         print('gravity is off')
     total_mass = fuel + spacecraft_mass
-    print(f'gamma={gamma}')
     fuel_consumption = 0
-    time = 9000
-    dt = 1e-3
-    N = int(np.ceil(time/dt))
-    v = np.zeros((N,2))
-    r = np.zeros((N,2))
-    a = np.zeros((N,2))
-    v_esc = np.zeros((N,2))
-    r[0,:] = r_initial
-    r_vec0 = r[0,:]
-    r_norm0 = np.linalg.norm(r_vec0)
-    r_unit0 = r_vec0/r_norm0
-    v[0,:] = v_initial
-    a[0,:] = ((thrust_force - (gamma*planet_mass*total_mass / r_norm0**2)) / total_mass)*r_unit0
-    print(f'acceleration vector at t=0 s = {a[0,:]}')
-    v_rad = np.dot(v[0,:], r_unit0)
-    T = np.zeros(N)
-    i = 0
-    T_success = 0
+    theta = 0
+    i = np.array([1,0])
+    j = np.array([0,1])
+
+    v = np.zeros((1,2))
+    r = np.zeros((1,2))
+    v0 = 2*np.pi*planet_radius / rotational_time
+    w = v0 / planet_radius
+    v[0] = v0*j
+    r[0] = planet_radius*i
+    r_norm = np.linalg.norm(r[0])
+    e_r = r[0] / r_norm
+    a = (thrust_force/total_mass - gamma*planet_mass / r_norm**2)*e_r
+    dt = 1e-4
+    v_rad = np.dot(v[0], e_r)
+    T = 0
     while v_rad <= dv:
-        r_vec = r[i,:]
-        r_norm = np.linalg.norm(r_vec)
-        r_unit = r_vec/r_norm
-        v[i+1,:] = v[i,:] + a[i,:]*dt
-        r[i+1,:] = r[i,:] + v[i+1]*dt
-        T[i+1] = T[i] + dt
-        v_esc[i+1,:] = dv*r_unit
-        v_rad = np.dot(v[i+1,:], r_unit)
+        v[0] = v[0] + a[0]*dt
+        r[0] = r[0] + v[0]*dt
+        v_norm = np.linalg.norm(v[0])
+        r_norm = np.linalg.norm(r[0])
+        r_norm = np.linalg.norm(r[0])
+        e_r = r[0] / r_norm
+        T += dt
+        # theta += w*dt
+        # e_r = np.array([np.cos(theta), np.sin(theta)])
+        # e_t = np.array([-np.sin(theta), np.cos(theta)])
+        v_rad = np.dot(v[0], e_r)
         total_mass -= mass_loss_rocket*dt
         fuel_consumption += mass_loss_rocket*dt
-        a[i+1,:] = ((thrust_force - (gamma*planet_mass*total_mass / r_norm**2))) / total_mass * r_unit
-        i += 1
-        T_success = T[i]
+        a = (thrust_force/total_mass - gamma*planet_mass / r_norm**2)*e_r
         if total_mass <= spacecraft_mass:
             print('not enough fuel')
-            print('r=', r[i,:])
-            print('v=', v[i,:])
-            return fuel_consumption, total_mass - spacecraft_mass, T[:i-1], r[:i-1,:], v[:i-1,:]
-    print('Succesful boost in', T_success, 'seconds')
-    return fuel_consumption, total_mass - spacecraft_mass, T[:i-1], r[:i-1,:], v[:i-1,:]
+            print('time : ', T)
+            print('r=', r)
+            print('v=', v)
+            return fuel_consumption, total_mass - spacecraft_mass, r, T
+        if r_norm < planet_radius:
+            r[0] = planet_radius*e_r
+    print('Succesful boost in', T, 'seconds')
+    if T > 1200 and gravity == True:
+        print('Launch is taking too much time')
+    return fuel_consumption, total_mass - spacecraft_mass, r, T
 
-mass_consumed_boost, fuel_left, T, r, v = rocket_boost(v_escape, initial_fuel, gravity=True)
+mass_consumed_boost, fuel_left, r, T = rocket_boost(v_escape, initial_fuel, gravity=True)
 print(f'consumption : {mass_consumed_boost}\nfuel left : {fuel_left}')
-print(f'Position:{r[-1,:]}')
-print(f'Velocity:{v[-1,:]}')
+# mass_consumed_boost, fuel_left = rocket_boost(30, fuel_left, gravity=False)
+# print(f'consumption : {mass_consumed_boost}\nfuel left : {fuel_left}')
 
-r_planet = np.array([1.8589133169 - (planet_radius*6.68458712e-9), 0])   # vektoren peker i sentrum av planeten
-R = r_planet+r[-1,:]    # vektoren peker fra stjernen på raketten
-print(R)
+r_planet = np.array([system.initial_positions[0,0], system.initial_positions[1,0]])
 
-plt.plot(T, r[:,0], label='Gravity on')
+R = r / AU + r_planet
 
-mass_consumed_boost, fuel_left, T, r, v = rocket_boost(v_escape, initial_fuel, gravity=False)
-
-print(f'consumption : {mass_consumed_boost}\nfuel left : {fuel_left}')
-print(f'Position:{r[-1,:]}')
-print(f'Velocity:{v[-1,:]}')
-
-plt.plot(T, r[:,0], label='Gravity off')
-plt.legend()
-plt.ticklabel_format(style='plain', useOffset=None)
-plt.title('Distance from planet in x-direction')
-plt.xlabel('Time')
-plt.ylabel('Km')
-# plt.show()
 """
 v_escape = 12249.367264147773m/s
-
 gravity is on
-gamma=6.6743e-11
-acceleration vector at t=0 s = [8.61803127 0.        ]
-Succesful boost in 835.7659999871487 seconds
-consumption : 3525.7148795100384
-fuel left : 474.28512044418994
-Position:[2.78093612e+11 2.54765157e+07]
-Velocity:[12246.54613139 30483.39596771]
-[2.78093612e+11 2.54765157e+07]
+Succesful boost in 835.9359999871447 seconds
+consumption : 3526.4320318343753
+fuel left : 473.5679681198144
 gravity is off
-gamma=0
-acceleration vector at t=0 s = [8.61803128 0.        ]
-Succesful boost in 835.7659999871487 seconds
-consumption : 3525.7148795100384
-fuel left : 474.28512044418994
-Position:[2.78093612e+11 2.54765157e+07]
-Velocity:[12246.54613756 30483.39596771]
+Succesful boost in 65.15099999994703 seconds
+consumption : 274.84230049690007
+fuel left : 198.72566761751273
 """
 
-launch_position = np.array([1.8589133169+(planet_radius*6.68458712e-12), 0])
-mission.set_launch_parameters(thrust_force, mass_loss_rocket, initial_fuel+3500, 1800, launch_position, 0)
-mission.launch_rocket()
-mission.verify_launch_result(R)
+
+pos = (system.initial_positions[0,0] + system.radii[0]*1000 / AU, system.initial_positions[1,0])
+
+g = const.G*system.masses[0]*1.989e30/(system.radii[0]*1000)**2
+print(g)
+mission.set_launch_parameters(thrust_force, mass_loss_rocket, initial_fuel, 2*600, pos, 0)
+mission.launch_rocket(0.001)
+mission.verify_launch_result(R[0])
