@@ -8,6 +8,29 @@ mission = SpaceMission(seed)
 
 # print(mission.spacecraft_mass)
 # system.print_informations()
+# print(system.star_temperature)
+# print(system.aphelion_angles)
+# print(system.eccentricities)
+# print(system.semi_major_axes)
+
+'''
+Planets in order of closest to star:
+0, 1, 6, 7, 2, 5, 3, 4
+'''
+
+
+'''
+Star temperature: 7985.019468972192 K
+Sun temperature: 5778 K
+'''
+
+'''
+Aphelion angels: [0, 4.15430044, 2.36900623, 0.84972349, 0.72126164, 4.03998827, 4.72664666, 1.41925568] in radians
+
+Eccentricities: [0.00562084, 0.01669338, 0.04303139, 0.08387873, 0.02863436, 0.03421009, 0.05231877, 0.02263108]
+
+Semi-major axes: [ 1.84852307,  2.79833111,  7.75328387, 13.5615841,  21.12461887, 10.00416126, 3.63010736,  4.77438331] in AU
+'''
 
 '''
 Spacecraft mass: 1100.0 kg
